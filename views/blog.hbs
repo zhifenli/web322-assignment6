@@ -1,21 +1,22 @@
 <div class="row">
   <section class="main col-md-9">
 
-    {{#if data.posts}}
+    {{#if data.post}}
       <article>
-        <h2>{{data.posts.title}}</h2>
+        <h2>{{data.post.title}}</h2>
         <img
-          src={{data.posts.featureImage}}
+          src={{data.post.featureImage}}
           alt="feature Image"
           style="width:100%"
         />
         <br /><br />
-        {{#safeHTML data.posts.body}}{{/safeHTML}}
+        {{#safeHTML data.post.body}}{{/safeHTML}}
         <br /><br />
-        <strong>Category: {{data.posts.category}}</strong>
+        <strong>Category: {{data.post.title}}</strong>
         <br />
 
-        {{!-- <strong>Last Updated: {{#formatDate postDate}}{{/formatDate}}</strong> --}}
+        <strong>Last Updated:
+          {{#formatDate data.post.postDate}}{{/formatDate}}</strong>
 
       </article>
     {{else}}

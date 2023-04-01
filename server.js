@@ -121,38 +121,50 @@ app.get("/css/main.css", (req, res) => {
   res.sendFile(path.join(__dirname, "public/css/main.css"));
 });
 
-app.get("/blog", (req, res) => {
-  blogService
-    .getPublishedPosts()
-    .then((posts) => {
-      console.log("### then1", posts.length);
+app.get("/blog", async (req, res) => {
+  // Declare an object to store properties for the view
+  let viewData = {};
 
-      if (posts.length > 0) {
-        blogService
-          .getCategories()
-          .then((categories) => {
-            for (let post of posts) {
-              let targetCategory = categories.find(
-                (cat) => cat.id === post.category
-              );
-              post.categoryTitle = targetCategory?.title;
-              console.log("post.categoryTitle:  " + post.categoryTitle);
-              console.log("targetCategory?.title:  " + targetCategory.title);
-            }
-            console.log("### then2", categories?.length, posts.length);
-            res.render("blog", {
-              data: { posts, categories },
-              layout: "main",
-            });
-          })
-          .catch((err) => {
-            res.status(500).send({ message: err });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).send({ message: err });
-    });
+  try {
+    // declare empty array to hold "post" objects
+    let posts = [];
+
+    // if there's a "category" query, filter the returned posts by category
+    if (req.query.category) {
+      // Obtain the published "posts" by category
+      posts = await blogService.getPublishedPostsByCategory(req.query.category);
+    } else {
+      // Obtain the published "posts"
+      posts = await blogService.getPublishedPosts();
+    }
+
+    // sort the published posts by postDate
+    posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
+
+    // get the latest post from the front of the list (element 0)
+    let post = posts[0];
+
+    // store the "posts" and "post" data in the viewData object (to be passed to the view)
+    viewData.posts = posts;
+    viewData.post = post;
+  } catch (err) {
+    viewData.message = "no results";
+  }
+
+  try {
+    // Obtain the full list of "categories"
+    let categories = await blogService.getCategories();
+
+    // store the "categories" data in the viewData object (to be passed to the view)
+    viewData.categories = categories;
+  } catch (err) {
+    viewData.categoriesMessage = "no results";
+  }
+
+  // render the "blog" view with all of the data (viewData)
+  res.render("blog", {
+    data: viewData,
+  });
 });
 
 app.get("/", (req, res) => {
@@ -160,43 +172,44 @@ app.get("/", (req, res) => {
 });
 
 //http://localhost:8080/blog/10?category=3
-// app.get("/blog/:id", async (req, res) => {
-//   const viewData = {};
-//   try {
-//     let posts = [];
 
-//     if (req.query.category) {
-//       posts = await blogService.getPublishedPostsByCategory(req.query.category);
-//     } else {
-//       posts = await blogService.getPublishedPosts();
-//     }
+app.get("/blog/:id", async (req, res) => {
+  const viewData = {};
+  try {
+    let posts = [];
 
-//     posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
+    if (req.query.category) {
+      posts = await blogService.getPublishedPostsByCategory(req.query.category);
+    } else {
+      posts = await blogService.getPublishedPosts();
+    }
 
-//     viewData.posts = posts;
-//   } catch (err) {
-//     viewData.postsMessage = "no results";
-//   }
+    posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
 
-//   try {
-//     viewData.post = await blogService.getPostById(req.params.id);
-//   } catch (e) {
-//     viewData.message = "no results";
-//   }
+    viewData.posts = posts;
+  } catch (err) {
+    viewData.postsMessage = "no results";
+  }
 
-//   try {
-//     // Obtain the full list of "categories"
-//     let categories = await blogService.getCategories();
+  try {
+    viewData.post = await blogService.getPostById(req.params.id);
+  } catch (e) {
+    viewData.message = "no results";
+  }
 
-//     // store the "categories" data in the viewData object (to be passed to the view)
-//     viewData.categories = categories;
-//   } catch (err) {
-//     viewData.categoriesMessage = "no results";
-//   }
+  try {
+    // Obtain the full list of "categories"
+    let categories = await blogService.getCategories();
 
-//   // render the "blog" view with all of the data (viewData)
-//   res.render("blog", { data: viewData });
-// });
+    // store the "categories" data in the viewData object (to be passed to the view)
+    viewData.categories = categories;
+  } catch (err) {
+    viewData.categoriesMessage = "no results";
+  }
+
+  // render the "blog" view with all of the data (viewData)
+  res.render("blog", { data: viewData });
+});
 
 app.get("/categories/delete/:id", (req, res) => {
   return new Promise(() => {
