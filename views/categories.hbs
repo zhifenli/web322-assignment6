@@ -1,0 +1,36 @@
+<div class="row">
+  <div class="col-md-12">
+   
+    <h2>Categories
+<button style="float:right" ""><a href="/categories/add" class="btn btn-success pull-right">Add Category</a></button>
+    </h2><hr />
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Category ID </th>
+          <th>Category Name</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {{! <p>TODO: render a list of all post title values here</p> }}
+        {{#each categories}}
+          <tr>
+            {{!-- {{#row @index}}{{/row}} --}}
+            <td>{{id}}</td>
+            <td>{{title}}</td>
+            <td> <a href="categories/delete/{{id}}" class="btn btn-danger">Remove</a> </td>
+          </tr>
+        {{else}}
+          <tr>
+            <td colspan="2">{{message}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+
+  </div>
+   {{#unless categories}}
+        <strong>{{message}}</strong>
+    {{/unless}}
+</div>

@@ -1,0 +1,48 @@
+.root {
+  width: 90%;
+  margin: 20px auto;
+}
+.nav {
+  text-align: center;
+}
+
+.content {
+  display: flex;
+}
+.content-left {
+  margin-right: 100px;
+}
+
+.post-form-body {
+  width: 90%;
+  margin: 10px auto;
+}
+.add-post-button {
+  text-align: right;
+}
+#body,
+#title,
+#category {
+  width: 100%;
+}
+.file-upload {
+  border: 1px solid black;
+}
+.category-div,
+.published-div {
+  display: inline-block;
+  width: 40%;
+  margin-right: 10px;
+}
+
+.table td {
+  border: 1px solid black;
+}
+
+.table th {
+  border: 1px solid black;
+}
+
+.container {
+  margin-top: 105px;
+}
