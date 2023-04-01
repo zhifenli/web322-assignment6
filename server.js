@@ -410,14 +410,12 @@ app.post("/posts/add", upload.single("featureImage"), async (req, res) => {
   }
 });
 
-// app.get("/about", (req, res) => {
-//   // res.sendFile(path.join(__dirname, "views/about.hbs"));
-
-//   res.render("about", {
-//     layout: "main", // do not use the default Layout (main.hbs)
-//     data: { name: "name about page" },
-//   });
-// });
+app.get("/about", (req, res) => {
+  res.render("about", {
+    layout: "main", // do not use the default Layout (main.hbs)
+    data: { name: "My Web Page" },
+  });
+});
 
 app.use((req, res, next) => {
   res.status(404).render("404");

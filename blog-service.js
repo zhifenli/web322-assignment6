@@ -169,8 +169,7 @@ function getPublishedPosts() {
 async function getPublishedPostsByCategory(category) {
   return new Promise((resolve, reject) => {
     PostSchema.findAll({
-      where: { publoished: true, category: [parseInt(category)] },
-      order: ["postDate", "DESC"],
+      where: { published: true, category: [parseInt(category)] },
     })
       .then((data) => resolve(data))
       .catch((err) => reject("no results returned" + err));
