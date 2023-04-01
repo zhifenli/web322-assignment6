@@ -1,14 +1,14 @@
 /*********************************************************************************
- *  WEB322 – Assignment 4
+ *  WEB322 – Assignment 5
  *  I declare that this assignment is my own work in accordance with Seneca Academic Policy.
  *  No part of this assignment has been copied manually or electronically from any other source
  *  (including web sites) or distributed to other students.
  *
- *  Name: Zhifen Li         Student ID: 168833218            Date: 2013-03-20
+ *  Name: Zhifen Li         Student ID: 168833218            Date: 2013-03-31
  *
- *  Cyclic Web App URL: https://magnificent-sock-tick.cyclic.app
+ *  Cyclic Web App URL: https://fantastic-deer-scrubs.cyclic.app/blog
  *
- *  GitHub Repository URL: https://github.com/zhifenli/web322-assignment4
+ *  GitHub Repository URL: https://github.com/zhifenli/web322-assignment5
  *
  ********************************************************************************/
 var HTTP_PORT = process.env.PORT || 8080;
