@@ -445,5 +445,5 @@ Promise.all([blogService.initialize(), authService.initialize()])
     app.listen(HTTP_PORT, onHttpStart);
   })
   .catch((e) => {
-    console.log("App initialized all serivces with error", e);
+    console.log("unable to start server: ", e);
   });

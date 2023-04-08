@@ -62,13 +62,24 @@ async function initialize() {
   });
 }
 
+async function findUserByUsername(userName) {
+  // {userName, email}
+  const foundUsers = await User.find({ userName: userName });
+  return foundUsers;
+}
+
 // registerUser(userData)
 async function registerUser(userData) {
   console.log("### registerUser with userData", userData);
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     if (userData.password != userData.password2) {
       reject("Password do not match!");
     } else {
+      const existingUsers = await findUserByUsername(userData.userName);
+      if (existingUsers.length > 0) {
+        reject("UserName already exist, Please try another one!");
+        return;
+      }
       let newUser = new User(userData);
       newUser
         .save()
