@@ -24,7 +24,7 @@ const streamifier = require("streamifier");
 const exphbs = require("express-handlebars");
 const stripJs = require("strip-js");
 const blogService = require("./blog-service");
-const authData = require("./auth-service");
+const authService = require("./auth-service");
 const { resolve } = require("path");
 
 const app = express();
@@ -81,7 +81,7 @@ cloudinary.config({
 const upload = multer();
 
 const onHttpStart = () => {
-  console.log("Express http server listening on", HTTP_PORT);
+  console.log("###Express http server listening on", HTTP_PORT);
 };
 
 // middlewares
@@ -102,6 +102,7 @@ const authMiddleware = (req, res, next) => {
 
 // app.use(loggerMiddleware);
 // app.use(express.static("views"));
+app.use(express.json());
 app.use(express.static("public"));
 app.use(function (req, res, next) {
   let route = req.path.substring(1);
@@ -421,11 +422,28 @@ app.get("/about", (req, res) => {
   });
 });
 
+app.post("/auth", async (req, res) => {
+  const userData = req.body;
+  try {
+    const createdUser = await authService.registerUser(userData);
+    res.send({ test: "OK", data: userData });
+  } catch (err) {
+    console.log("The new user was not created successfully!", err);
+    res.status(500).send(err);
+  }
+});
+
 app.use((req, res, next) => {
   res.status(404).render("404");
 });
 
 // check db connection
-Promise.all([blogService.initialize(), authData.initialize()]).then(() => {
-  app.listen(HTTP_PORT, onHttpStart);
-});
+console.log("App initialising all services ...");
+Promise.all([blogService.initialize(), authService.initialize()])
+  .then(() => {
+    console.log("App initialized all services successfully");
+    app.listen(HTTP_PORT, onHttpStart);
+  })
+  .catch((e) => {
+    console.log("App initialized all serivces with error", e);
+  });
