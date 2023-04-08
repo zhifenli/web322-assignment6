@@ -39,22 +39,22 @@ const sequelize = new Sequelize(
 //   });
 
 async function initialize() {
-  console.log("DB initializing...");
+  console.log("Blog initializing...");
   try {
     await sequelize.authenticate();
-    console.log("DB authenticated successfully");
+    console.log("Blog DB authenticated successfully");
   } catch (err) {
-    console.log("DB authentication error", err);
+    console.log("Blog DB authentication error", err);
     return Promise.reject("DB authentication error");
   }
 
   try {
     await sequelize.sync();
-    console.log("DB synced successfully.");
+    console.log("Blog DB synced successfully.");
     return Promise.resolve("DB synced successfully.");
   } catch (err) {
-    console.log("DB sync error", err);
-    return Promise.reject("DB sync error");
+    console.log("Blog DB sync error", err);
+    return Promise.reject("Blog DB sync error");
   }
 
   // return new Promise((resolve, reject) => {

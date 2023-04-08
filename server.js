@@ -24,6 +24,7 @@ const streamifier = require("streamifier");
 const exphbs = require("express-handlebars");
 const stripJs = require("strip-js");
 const blogService = require("./blog-service");
+const authData = require("./auth-service");
 const { resolve } = require("path");
 
 const app = express();
@@ -425,6 +426,6 @@ app.use((req, res, next) => {
 });
 
 // check db connection
-blogService.initialize();
-
-app.listen(HTTP_PORT, onHttpStart);
+Promise.all([blogService.initialize(), authData.initialize()]).then(() => {
+  app.listen(HTTP_PORT, onHttpStart);
+});
