@@ -13,6 +13,7 @@
  ********************************************************************************/
 
 const mongoose = require("mongoose");
+const { json } = require("sequelize");
 const Schema = mongoose.Schema;
 
 // mongoose
@@ -33,13 +34,13 @@ const Schema = mongoose.Schema;
 //   });
 
 const userSchema = new Schema({
-  userName: String,
+  userName: { type: String, unique: true, dropDups: true },
   password: String,
   email: String,
   loginHistory: [{ dateTime: Date, userAgent: String }],
 });
 // let user = mongoose.model("userData", userScheam);
-let User;
+let UserModel;
 
 async function initialize() {
   return new Promise(function (resolve, reject) {
@@ -55,8 +56,7 @@ async function initialize() {
     db.once("open", () => {
       console.log("Auth mongodb connection open successfully.");
 
-      User = db.model("users", userSchema);
-      console.log("User1: ", User);
+      UserModel = db.model("users", userSchema);
       resolve();
     });
   });
@@ -64,7 +64,7 @@ async function initialize() {
 
 async function findUserByUsername(userName) {
   // {userName, email}
-  const foundUsers = await User.find({ userName: userName });
+  const foundUsers = await UserModel.find({ userName: userName });
   return foundUsers;
 }
 
@@ -74,34 +74,64 @@ async function registerUser(userData) {
   return new Promise(async (resolve, reject) => {
     if (userData.password != userData.password2) {
       reject("Password do not match!");
-    } else {
-      const existingUsers = await findUserByUsername(userData.userName);
-      if (existingUsers.length > 0) {
-        reject("UserName already exist, Please try another one!");
-        return;
-      }
-      let newUser = new User(userData);
-      newUser
-        .save()
-        .then(() => {
-          console.log("The new user was saved to the users.");
-          resolve(userData);
-        })
-        .catch((err) => {
-          console.log("There was a err saving the new user.");
-          if (err.code === 11000) {
-            reject("User name already taken");
-          } else {
-            reject(`There was an error creating the user: ${err}`);
-          }
-        });
+      return;
     }
+    let newUser = new UserModel(userData);
+    newUser
+      .save()
+      .then((created) => {
+        console.log("The new user was saved to the users.");
+        resolve(created);
+      })
+      .catch((err) => {
+        console.log("There was an error saving the new user.");
+        if (err.code === 11000) {
+          reject("User name already taken");
+        } else {
+          reject(`There was an error creating the user: ${err}`);
+        }
+      });
   });
 }
 
-// checkUser(userData)
-// function checkerUser() {}
+//checkUser(userData);
+async function checkerUser(userRequest) {
+  return new Promise((resolve, reject) => {
+    User.find({ userName: userRequest.userName })
+      .exec()
+      .then((users) => {
+        if (users.length <= 0) {
+          return reject("Unable to find user: " + userRequest.userName);
+        }
+        if (users[0].password !== userRequest.password) {
+          return reject("Incorrect Password for user: " + userRequest.userName);
+        }
+        if (!users[0].loginHistory) {
+          users[0].loginHistory = [];
+        }
+        users[0].loginHistory.push({
+          dateTime: new Date().toString(),
+          userAgent: userRequest.userAgent,
+        });
+        User.updateOne(
+          { userName: userRequest.userName },
+          { $set: { loginHistory: users[0].loginHistory } }
+        )
+          .exec()
+          .then(() => {
+            resolve(users[0]);
+          })
+          .catch((err) => {
+            reject("There was an error verifying the user: " + err);
+          });
+      })
+      .catch((err) => {
+        reject("Unknown db error: " + err);
+      });
+  });
+}
 module.exports = {
   initialize,
   registerUser,
+  checkerUser,
 };

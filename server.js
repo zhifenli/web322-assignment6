@@ -17,7 +17,7 @@ const path = require("path");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
-
+const clientSessions = require("client-sessions");
 // set up sequelize to point to our postgres database
 
 // const blogData = require("./blog-service");
@@ -117,8 +117,33 @@ app.use(function (req, res, next) {
   next();
 });
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  clientSessions({
+    cookieName: "session",
+    secret: "web322 Assignment6",
+    duration: 2 * 60 * 1000,
+    activeDuration: 1000 * 60,
+  })
+);
+
+// app.use(function (req, res, next) {
+//   console.log("### req.session", req.session);
+//   res.locals.session = req.session;
+//   next();
+// });
+
+function ensureLogin(req, res, next) {
+  if (!req.session.user) {
+    console.log("redirecting to login");
+    res.redirect("/login");
+  } else {
+    next();
+  }
+}
+
 // routes
-app.get("/", (req, res) => {
+app.get("/", ensureLogin, (req, res) => {
   res.redirect("/blog");
 });
 
@@ -126,7 +151,7 @@ app.get("/css/main.css", (req, res) => {
   res.sendFile(path.join(__dirname, "public/css/main.css"));
 });
 
-app.get("/blog", async (req, res) => {
+app.get("/blog", ensureLogin, async (req, res) => {
   // Declare an object to store properties for the view
   let viewData = {};
 
@@ -172,13 +197,13 @@ app.get("/blog", async (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
+app.get("/", ensureLogin, (req, res) => {
   res.redirect("/blog");
 });
 
 //http://localhost:8080/blog/10?category=3
 
-app.get("/blog/:id", async (req, res) => {
+app.get("/blog/:id", ensureLogin, async (req, res) => {
   const viewData = {};
   try {
     let posts = [];
@@ -216,7 +241,7 @@ app.get("/blog/:id", async (req, res) => {
   res.render("blog", { data: viewData });
 });
 
-app.get("/categories/delete/:id", (req, res) => {
+app.get("/categories/delete/:id", ensureLogin, (req, res) => {
   return new Promise(() => {
     blogService
       .deleteCategoryById(req.params.id)
@@ -229,7 +254,7 @@ app.get("/categories/delete/:id", (req, res) => {
   });
 });
 
-app.get("/posts/delete/:id", (req, res) => {
+app.get("/posts/delete/:id", ensureLogin, (req, res) => {
   return new Promise(() => {
     blogService
       .deletePostById(req.params.id)
@@ -287,7 +312,7 @@ app.get("/posts/delete/:id", (req, res) => {
 //   // res.json(viewData);
 // });
 
-app.get("/posts", async (req, res) => {
+app.get("/posts", ensureLogin, async (req, res) => {
   try {
     let posts;
     if (req.query.category) {
@@ -321,7 +346,7 @@ app.get("/posts", async (req, res) => {
   }
 });
 
-app.get("/categories", async (rep, res) => {
+app.get("/categories", ensureLogin, async (rep, res) => {
   try {
     let categories = await blogService.getCategories();
     if (categories.length > 0) {
@@ -341,7 +366,7 @@ app.get("/categories", async (rep, res) => {
   }
 });
 
-app.get("/posts/add", async (req, res) => {
+app.get("/posts/add", ensureLogin, async (req, res) => {
   let categories;
   try {
     categories = await blogService.getCategories();
@@ -355,13 +380,13 @@ app.get("/posts/add", async (req, res) => {
   }
 });
 
-app.get("/categories/add", async (req, res) => {
+app.get("/categories/add", ensureLogin, async (req, res) => {
   res.render("addCategory", {
     layout: "main",
   });
 });
 
-app.post("/categories/add", async (req, res) => {
+app.post("/categories/add", ensureLogin, async (req, res) => {
   blogService
     .addCategory(req.body)
     .then((data) => res.redirect("/categories"))
@@ -370,66 +395,100 @@ app.post("/categories/add", async (req, res) => {
     );
 });
 
-app.post("/posts/add", upload.single("featureImage"), async (req, res) => {
-  function processPost(imageUrl) {
-    req.body.featureImage = imageUrl;
+app.post(
+  "/posts/add",
+  upload.single("featureImage"),
+  ensureLogin,
+  async (req, res) => {
+    function processPost(imageUrl) {
+      req.body.featureImage = imageUrl;
 
-    blogService
-      .addPost(req.body)
-      .then((postData) => {
-        res.redirect("/posts");
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).send("Cannot save new post. Please try again.");
+      blogService
+        .addPost(req.body)
+        .then((postData) => {
+          res.redirect("/posts");
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(500).send("Cannot save new post. Please try again.");
+        });
+    }
+
+    if (!req.file) {
+      processPost("");
+      return;
+    }
+
+    let streamUpload = (req) => {
+      return new Promise((resolve, reject) => {
+        let uploadStream = cloudinary.uploader.upload_stream(
+          (error, result) => {
+            if (result) {
+              console.log("cloudinaryUploadStream success result", result);
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
+
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
       });
+    };
+
+    try {
+      let result = await streamUpload(req);
+      console.log("StreamUpload succeeded: ", result);
+      processPost(result.url);
+    } catch (e) {
+      console.log("StreamUpload Failed: ", e);
+      processPost("");
+    }
   }
+);
 
-  if (!req.file) {
-    processPost("");
-    return;
-  }
-
-  let streamUpload = (req) => {
-    return new Promise((resolve, reject) => {
-      let uploadStream = cloudinary.uploader.upload_stream((error, result) => {
-        if (result) {
-          console.log("cloudinaryUploadStream success result", result);
-          resolve(result);
-        } else {
-          reject(error);
-        }
-      });
-
-      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-    });
-  };
-
-  try {
-    let result = await streamUpload(req);
-    console.log("StreamUpload succeeded: ", result);
-    processPost(result.url);
-  } catch (e) {
-    console.log("StreamUpload Failed: ", e);
-    processPost("");
-  }
-});
-
-app.get("/about", (req, res) => {
+app.get("/about", ensureLogin, (req, res) => {
   res.render("about", {
     layout: "main", // do not use the default Layout (main.hbs)
     data: { name: "My Web Page" },
   });
 });
 
-app.post("/auth", async (req, res) => {
+app.get("/login", (req, res) => {
+  res.render("login", {
+    layout: "main",
+  });
+});
+
+app.get("/register", (req, res) => {
+  res.render("register", {
+    layout: "main",
+  });
+});
+
+app.post("/auth", ensureLogin, async (req, res) => {
   const userData = req.body;
   try {
     const createdUser = await authService.registerUser(userData);
     res.send({ test: "OK", data: userData });
   } catch (err) {
-    console.log("The new user was not created successfully!", err);
+    console.log("The new user was not created!", err);
     res.status(500).send(err);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    req.body.userAgent = req.get("User-Agent");
+    authService.checkerUser(req.body).then(() => {
+      req.session.user = {
+        userName: req.body.userName,
+        email: req.body.email,
+        loginHistory: req.body.loginHistory,
+      };
+    });
+  } catch (err) {
+    res.send(err);
   }
 });
 
