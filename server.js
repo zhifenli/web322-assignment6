@@ -480,15 +480,19 @@ app.post("/auth", ensureLogin, async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     req.body.userAgent = req.get("User-Agent");
-    authService.checkerUser(req.body).then(() => {
-      req.session.user = {
-        userName: req.body.userName,
-        email: req.body.email,
-        loginHistory: req.body.loginHistory,
-      };
-    });
+    await authService.checkerUser(req.body);
+    req.session.user = {
+      userName: req.body.userName,
+      email: req.body.email,
+      loginHistory: req.body.loginHistory,
+    };
+    res.redirect("/posts");
   } catch (err) {
-    res.send(err);
+    console.log("login failed", err);
+    res.render("login", {
+      layout: "main",
+      errorMessage: `${err}`,
+    });
   }
 });
 

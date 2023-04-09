@@ -97,7 +97,7 @@ async function registerUser(userData) {
 //checkUser(userData);
 async function checkerUser(userRequest) {
   return new Promise((resolve, reject) => {
-    User.find({ userName: userRequest.userName })
+    UserModel.find({ userName: userRequest.userName })
       .exec()
       .then((users) => {
         if (users.length <= 0) {
@@ -113,7 +113,7 @@ async function checkerUser(userRequest) {
           dateTime: new Date().toString(),
           userAgent: userRequest.userAgent,
         });
-        User.updateOne(
+        UserModel.updateOne(
           { userName: userRequest.userName },
           { $set: { loginHistory: users[0].loginHistory } }
         )
