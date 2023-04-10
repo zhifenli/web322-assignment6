@@ -144,7 +144,7 @@ function ensureLogin(req, res, next) {
 
 // routes
 app.get("/", ensureLogin, (req, res) => {
-  res.redirect("/blog");
+  res.redirect("/login");
 });
 
 app.get("/css/main.css", (req, res) => {
@@ -178,22 +178,25 @@ app.get("/blog", ensureLogin, async (req, res) => {
     viewData.posts = posts;
     viewData.post = post;
   } catch (err) {
+    console.log("Fetching posts error", err);
     viewData.message = "no results";
   }
 
   try {
     // Obtain the full list of "categories"
     let categories = await blogService.getCategories();
-
     // store the "categories" data in the viewData object (to be passed to the view)
     viewData.categories = categories;
   } catch (err) {
+    console.log("Fetching categories error", err);
     viewData.categoriesMessage = "no results";
   }
 
   // render the "blog" view with all of the data (viewData)
   res.render("blog", {
     data: viewData,
+    user: req.session.user,
+    layout: "main",
   });
 });
 
@@ -238,7 +241,11 @@ app.get("/blog/:id", ensureLogin, async (req, res) => {
   }
 
   // render the "blog" view with all of the data (viewData)
-  res.render("blog", { data: viewData });
+  res.render("blog", {
+    data: viewData,
+    user: req.session.user,
+    layout: "main",
+  });
 });
 
 app.get("/categories/delete/:id", ensureLogin, (req, res) => {
@@ -267,51 +274,6 @@ app.get("/posts/delete/:id", ensureLogin, (req, res) => {
   });
 });
 
-// app.get("/blog", async (req, res) => {
-//   //   // Declare an object to store properties for the view
-//   let viewData = {};
-
-//   try {
-//     // declare empty array to hold "post" objects
-//     let posts = [];
-
-//     // if there's a "category" query, filter the returned posts by category
-//     if (req.query.category) {
-//       // Obtain the published "posts" by category
-//       posts = await blogService.getPublishedPostsByCategory(req.query.category);
-//     } else {
-//       // Obtain the published "posts"
-//       posts = await blogData.getPublishedPosts();
-//     }
-
-//     // sort the published posts by postDate
-//     posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
-
-//     // get the latest post from the front of the list (element 0)
-//     let post = posts[0];
-
-//     // store the "posts" and "post" data in the viewData object (to be passed to the view)
-//     viewData.posts = posts;
-//     viewData.post = post;
-//   } catch (err) {
-//     viewData.message = "no results";
-//   }
-
-//   try {
-//     // Obtain the full list of "categories"
-//     let categories = await blogData.getCategories();
-
-//     // store the "categories" data in the viewData object (to be passed to the view)
-//     viewData.categories = categories;
-//   } catch (err) {
-//     viewData.categoriesMessage = "no results";
-//   }
-
-//   // render the "blog" view with all of the data (viewData)
-//   res.render("blog", { data: viewData });
-//   // res.json(viewData);
-// });
-
 app.get("/posts", ensureLogin, async (req, res) => {
   try {
     let posts;
@@ -333,11 +295,13 @@ app.get("/posts", ensureLogin, async (req, res) => {
       res.render("posts", {
         posts: posts,
         layout: "main",
+        user: req.session.user,
       });
     } else {
       res.render("posts", {
         message: "no results",
         layout: "main",
+        user: req.session.user,
       });
     }
   } catch (message) {
@@ -346,23 +310,25 @@ app.get("/posts", ensureLogin, async (req, res) => {
   }
 });
 
-app.get("/categories", ensureLogin, async (rep, res) => {
+app.get("/categories", ensureLogin, async (req, res) => {
   try {
     let categories = await blogService.getCategories();
     if (categories.length > 0) {
       res.render("categories", {
         categories: categories,
+        user: req.session.user,
         layout: "main",
       });
     } else {
       res.render("categories", {
         message: "no result",
+        user: req.session.user,
         layout: "main",
       });
     }
-  } catch (message) {
-    res.render("posts", { message: "no results" });
-    res.status(500).send({ message: "no results" });
+  } catch (error) {
+    console.log("Fetching categories error", error);
+    res.render("categories", { message: "no results" });
   }
 });
 
@@ -375,6 +341,7 @@ app.get("/posts/add", ensureLogin, async (req, res) => {
   } finally {
     res.render("addPost", {
       data: categories,
+      user: req.session?.user,
       layout: "main",
     });
   }
@@ -382,6 +349,7 @@ app.get("/posts/add", ensureLogin, async (req, res) => {
 
 app.get("/categories/add", ensureLogin, async (req, res) => {
   res.render("addCategory", {
+    user: req.session.user,
     layout: "main",
   });
 });
@@ -451,6 +419,7 @@ app.get("/about", ensureLogin, (req, res) => {
   res.render("about", {
     layout: "main", // do not use the default Layout (main.hbs)
     data: { name: "My Web Page" },
+    user: req.session.user,
   });
 });
 
@@ -466,32 +435,57 @@ app.get("/register", (req, res) => {
   });
 });
 
-app.post("/auth", ensureLogin, async (req, res) => {
+app.post("/register", async (req, res) => {
   const userData = req.body;
   try {
     const createdUser = await authService.registerUser(userData);
-    res.send({ test: "OK", data: userData });
+    res.render("register", {
+      layout: "main",
+      successMessage: "Account was created successfully!",
+    });
   } catch (err) {
     console.log("The new user was not created!", err);
-    res.status(500).send(err);
+    res.render("register", {
+      layout: "main",
+      errorMessage: "Failed to create account!",
+    });
   }
 });
 
 app.post("/login", async (req, res) => {
   try {
     req.body.userAgent = req.get("User-Agent");
-    await authService.checkerUser(req.body);
-    req.session.user = {
-      userName: req.body.userName,
-      email: req.body.email,
-      loginHistory: req.body.loginHistory,
-    };
+    const userFromDb = await authService.checkerUser(req.body);
+    req.session.user = userFromDb;
+
     res.redirect("/posts");
   } catch (err) {
     console.log("login failed", err);
     res.render("login", {
       layout: "main",
       errorMessage: `${err}`,
+    });
+  }
+});
+
+app.get("/logout", ensureLogin, (req, res) => {
+  req.session.reset();
+  res.redirect("/");
+});
+
+app.get("/userHistory", ensureLogin, async (req, res) => {
+  try {
+    // const history = await authService.getUserHistory(req.query.userName);
+
+    res.render("userHistory", {
+      layout: "main",
+      user: req.session.user,
+    });
+  } catch (err) {
+    res.render("userHistory", {
+      layout: "main",
+      user: req.session.user,
+      errorMessage: "Failed to load user history!",
     });
   }
 });

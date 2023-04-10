@@ -73,8 +73,12 @@
           </form>
           {{else}}
           <form class="navbar-form navbar-right">
+              {{#if user}}
+              <a href="/logout" class="btn btn-success"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Log Out</a>
+              {{else}}
               <a href="/register" class="btn btn-success"><span class="glyphicon glyphicon-cog"></span>&nbsp;&nbsp;Register</a>
               <a href="/login" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-right"></span>&nbsp;&nbsp;Log In</a>
+              {{/if}}
           </form>
           {{/if}}
           <ul class="nav navbar-nav navbar-right">

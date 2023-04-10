@@ -13,7 +13,7 @@
  ********************************************************************************/
 
 const mongoose = require("mongoose");
-const { json } = require("sequelize");
+const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
 
 // mongoose
@@ -76,6 +76,9 @@ async function registerUser(userData) {
       reject("Password do not match!");
       return;
     }
+    userData.password = await bcrypt.hash(userData.password, 10);
+    console.log("new user data: ", userData);
+
     let newUser = new UserModel(userData);
     newUser
       .save()
@@ -96,14 +99,19 @@ async function registerUser(userData) {
 
 //checkUser(userData);
 async function checkerUser(userRequest) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     UserModel.find({ userName: userRequest.userName })
       .exec()
-      .then((users) => {
+      .then(async (users) => {
         if (users.length <= 0) {
           return reject("Unable to find user: " + userRequest.userName);
         }
-        if (users[0].password !== userRequest.password) {
+
+        const passwordMatched = await bcrypt.compare(
+          userRequest.password,
+          users[0].password
+        );
+        if (!passwordMatched) {
           return reject("Incorrect Password for user: " + userRequest.userName);
         }
         if (!users[0].loginHistory) {
@@ -130,8 +138,27 @@ async function checkerUser(userRequest) {
       });
   });
 }
+
+async function getUserHistory(userName) {
+  return new Promise((resolve, reject) => {
+    UserModel.find({ userName: userName })
+      .select({
+        loginHistory: 1,
+        _id: 0,
+      })
+      .then((data) => {
+        // console.log("User History: ", data);
+        resolve(data[0].loginHistory);
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
 module.exports = {
   initialize,
   registerUser,
   checkerUser,
+  getUserHistory,
 };

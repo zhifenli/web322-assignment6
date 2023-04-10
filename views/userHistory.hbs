@@ -1,0 +1,28 @@
+<div class="col-md-12">
+
+  <h2>WEB322 {{ user.userName }} ({{ user.email }}) History</h2>
+  <hr />
+  {{#if errorMessage}}
+    <div class="alert alert-danger">
+      <strong>Error:</strong>
+      {{errorMessage}}</div>
+  {{/if}}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Login Data/Time </th>
+          <th>Client Information</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{! <p>TODO: render a list of all post title values here</p> }}
+        {{#each user.loginHistory}}
+          <tr>
+            {{!-- {{#row @index}}{{/row}} --}}
+            <td>{{dateTime}}</td>
+            <td>{{userAgent}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+  
+</div>

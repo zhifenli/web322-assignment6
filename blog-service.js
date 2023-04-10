@@ -93,7 +93,7 @@ let PostSchema = sequelize.define(
   }
 );
 
-let CategorySchema = sequelize.define("Category", {
+let CategorySchema = sequelize.define("Categories", {
   id: {
     type: Sequelize.INTEGER,
     primaryKey: true, // use "project_id" as a primary key
@@ -153,7 +153,9 @@ function getAllPosts() {
 function getCategories() {
   return new Promise((resolve, reject) => {
     CategorySchema.findAll()
-      .then((data) => resolve(data))
+      .then((data) => {
+        resolve(data);
+      })
       .catch((err) => reject("no results returned " + err));
   });
 }
