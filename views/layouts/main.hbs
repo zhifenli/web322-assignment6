@@ -52,9 +52,13 @@
 
 
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            {{#navLink "/blog"}}Blog{{/navLink}}
-            {{#navLink "/about"}}About{{/navLink}}
+          <ul class="nav navbar-nav navbar-form" style="background-color: white;">
+            {{!-- {{#navLink "/blog"}}Blog{{/navLink}} --}}
+              <a href="/blog" class="btn btn-primary"><span class="glyphicon">Blog</span>&nbsp;&nbsp;</a>
+
+            {{!-- {{#navLink "/about"}}About{{/navLink}} --}}
+              <a href="/about" class="btn btn-primary"><span class="glyphicon">About</span>&nbsp;&nbsp;</a>
+
           </ul>
 
 
@@ -67,7 +71,7 @@
                   </button>
                   <ul class="dropdown-menu" aria-labelledby="userMenu">
                       <li><a href="/userHistory">User History</a></li>
-                      <li><a href="/logout">Log Out</a></li>
+                      <li><a href="/logout" class="btn btn-primary">Log Out</a></li>
                   </ul>
               </div>
           </form>
@@ -81,10 +85,14 @@
               {{/if}}
           </form>
           {{/if}}
-          <ul class="nav navbar-nav navbar-right">
-             {{#navLink "/posts"}}Posts{{/navLink}}
+          <ul class="nav navbar-nav navbar-form navbar-right" style="background-color: white;">
+             {{!-- {{#navLink "/posts"}}Posts{{/navLink}} --}}
+              <a href="/posts" class="btn btn-primary"><span class="glyphicon">Posts</span>&nbsp;&nbsp;</a>
+
              {{!-- {{#navLink "/posts/add" }}Add Posts{{/navLink}} --}}
-             {{#navLink "/categories" }}Categories{{/navLink}}
+             {{!-- {{#navLink "/categories" }}Categories{{/navLink}} --}}
+              <a href="/categories" class="btn btn-primary"><span class="glyphicon">Categories</span>&nbsp;&nbsp;</a>
+
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
