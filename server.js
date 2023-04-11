@@ -496,9 +496,24 @@ app.use((req, res, next) => {
 
 // check db connection
 console.log("App initialising all services ...");
-Promise.all([blogService.initialize(), authService.initialize()])
+
+// Promise.all([blogService.initialize(), authService.initialize()])
+//   .then(() => {
+//     console.log("App initialized all services successfully");
+//     app.listen(HTTP_PORT, onHttpStart);
+//   })
+//   .catch((e) => {
+//     console.log("unable to start server: ", e);
+//   });
+
+blogService
+  .initialize()
   .then(() => {
-    console.log("App initialized all services successfully");
+    console.log("Blog service initialized successfully.");
+    return authService.initialize();
+  })
+  .then(() => {
+    console.log("Auth service initialized successfully.");
     app.listen(HTTP_PORT, onHttpStart);
   })
   .catch((e) => {
