@@ -6,9 +6,9 @@
  *
  *  Name: __Zhifen Li____ Student ID: 168833218___ Date: __2013-04-11_____
  *
- *  Cyclic Web App URL: https://fantastic-deer-scrubs.cyclic.app/blog
+ *  Cyclic Web App URL: https://wide-eyed-overalls-mite.cyclic.app/
  *
- *  GitHub Repository URL: https://github.com/zhifenli/web322-assignment5
+ *  GitHub Repository URL: https://github.com/zhifenli/web322-assignment6
  *
  ********************************************************************************/
 
