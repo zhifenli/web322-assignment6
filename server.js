@@ -506,16 +506,16 @@ console.log("App initialising all services ...");
 //     console.log("unable to start server: ", e);
 //   });
 
-blogService
+authService
   .initialize()
   .then(() => {
-    console.log("Blog service initialized successfully.");
-    return authService.initialize();
+    console.log("Auth service initialized successfully.");
+    return blogService.initialize();
   })
   .then(() => {
-    console.log("Auth service initialized successfully.");
+    console.log("Blog service initialized successfully.");
     app.listen(HTTP_PORT, onHttpStart);
   })
   .catch((e) => {
-    console.log("unable to start server: ", e);
+    console.log("Unable to start server: ", e);
   });

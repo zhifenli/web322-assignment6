@@ -43,18 +43,19 @@ const userSchema = new Schema({
 let UserModel;
 
 async function initialize() {
-  return new Promise(function (resolve, reject) {
-    let db = mongoose.createConnection(
+  console.log("[Auth] initializing service...");
+  return new Promise((resolve, reject) => {
+    const db = mongoose.createConnection(
       "mongodb+srv://zhifenli1121:UhPLuaN0RtAnsg5R@senecaweb.3q1jlq3.mongodb.net/?retryWrites=true&w=majority"
     );
 
     db.on("error", (err) => {
-      console.log("Auth mongodb connection error", err);
+      console.log("[Auth] mongodb connection error", err);
       reject(err);
     });
 
     db.once("open", () => {
-      console.log("Auth mongodb connection open successfully.");
+      console.log("[Auth] mongodb connection open successfully.");
 
       UserModel = db.model("users", userSchema);
       resolve();
